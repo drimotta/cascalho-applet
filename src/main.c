@@ -91,7 +91,7 @@ static void write_all(int fd, const char *data, size_t len) {
 int main(int argc, char **argv) {
     const char *origins[MAX_ORIGINS];
     agent_config cfg = {.origins = origins, .port = AGENT_PORT};
-    for (int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i += 2) {
         const char *a = argv[i];
         const char *v = i + 1 < argc ? argv[i + 1] : NULL;
         if (!v) usage();
@@ -104,7 +104,6 @@ int main(int argc, char **argv) {
         else if (strcmp(a, "--ca-bundle") == 0) cfg.ca_bundle = v;
         else if (strcmp(a, "--recovery-delays-ms") == 0) cfg.recovery_delays_ms = v;
         else usage();
-        i++;
     }
     if (cfg.origin_count == 0 || cfg.port <= 0 || cfg.port > 65535) usage();
     if (!cfg.module) cfg.module = default_module();

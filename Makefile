@@ -1,6 +1,10 @@
 CC ?= cc
 CFLAGS ?= -Wall -Wextra -Werror -std=c11 -g -D_POSIX_C_SOURCE=200809L
 BUILD ?= build
+# macOS hides INADDR_LOOPBACK and friends under strict POSIX.
+ifeq ($(shell uname),Darwin)
+CFLAGS += -D_DARWIN_C_SOURCE
+endif
 # A checkout of drimotta/nfse, built with `cargo build --lib`.
 NFSE_DIR ?= ../../nfse
 NFSE_LIB ?= $(NFSE_DIR)/target/debug
