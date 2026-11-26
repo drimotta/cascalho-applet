@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: applet
+      - uses: actions/checkout@v4
+        with:
+          repository: drimotta/nfse
+          path: nfse
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y softhsm2 opensc libssl-dev libcjson-dev libgtk-4-dev pkg-config
+      - name: Tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install softhsm opensc openssl@3 cjson pkg-config
+          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "SOFTHSM_MODULE=$(brew --prefix softhsm)/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
+      - name: Build libnfse
+        run: cargo build --lib
+        working-directory: nfse
+      - name: Unit tests
+        run: make unit NFSE_DIR=../nfse
+        working-directory: applet
+      - name: Integration tests
+        run: make integration NFSE_DIR=../nfse
+        working-directory: applet
+      # Builds the real dialogs: Cocoa on macOS, GTK 4 on Linux.
+      - name: Agent
+        run: make agent NFSE_DIR=../nfse
+        working-directory: applet
